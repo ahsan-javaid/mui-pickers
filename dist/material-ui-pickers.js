@@ -1935,7 +1935,7 @@ var convertToMeridiem = function convertToMeridiem(time, meridiem, ampm, utils) 
   return time;
 };
 
-var times = ["07:45 AM", "08:00 AM", "08:15 AM", "08:30 AM", "08:45 AM", "09:00 AM", "09:15 AM", "09:30 AM", "09:45 AM", "10:00 AM", "10:15 AM", "10:30 AM", "10:45 AM", "11:00 AM", "11:15 AM", "11:30 AM", "11:45 AM", "00:00 PM", "00:15 PM", "00:30 PM", "00:45 PM", "01:00 PM", "01:15 PM", "01:30 PM", "01:45 PM", "02:00 PM", "02:15 PM", "02:30 PM", "02:45 PM", "03:00 PM", "03:15 PM", "03:30 PM", "03:45 PM", "04:00 PM", "04:15 PM", "04:30 PM", "04:45 PM", "05:00 PM", "05:15 PM", "05:30 PM", "05:45 PM", "06:00 PM", "06:15 PM", "06:30 PM", "06:45 PM", "07:00 PM", "07:15 PM", "07:30 PM", "07:45 PM", "08:00 PM", "08:15 PM", "08:30 PM", "08:45 PM", "09:00 PM", "09:15 PM", "09:30 PM", "09:45 PM", "10:00 PM", "10:15 PM", "10:30 PM", "10:45 PM", "11:00 PM", "11:15 PM", "11:30 PM", "11:45 PM"];
+var times = ["07:45 AM", "08:00 AM", "08:15 AM", "08:30 AM", "08:45 AM", "09:00 AM", "09:15 AM", "09:30 AM", "09:45 AM", "10:00 AM", "10:15 AM", "10:30 AM", "10:45 AM", "11:00 AM", "11:15 AM", "11:30 AM", "11:45 AM", "12:00 PM", "12:15 PM", "12:30 PM", "12:45 PM", "01:00 PM", "01:15 PM", "01:30 PM", "01:45 PM", "02:00 PM", "02:15 PM", "02:30 PM", "02:45 PM", "03:00 PM", "03:15 PM", "03:30 PM", "03:45 PM", "04:00 PM", "04:15 PM", "04:30 PM", "04:45 PM", "05:00 PM", "05:15 PM", "05:30 PM", "05:45 PM", "06:00 PM", "06:15 PM", "06:30 PM", "06:45 PM", "07:00 PM", "07:15 PM", "07:30 PM", "07:45 PM", "08:00 PM", "08:15 PM", "08:30 PM", "08:45 PM", "09:00 PM", "09:15 PM", "09:30 PM", "09:45 PM", "10:00 PM", "10:15 PM", "10:30 PM", "10:45 PM", "11:00 PM", "11:15 PM", "11:30 PM", "11:45 PM"];
 
 var TimeView = function TimeView(props) {
   var _useState = React.useState(''),
@@ -1968,15 +1968,23 @@ var TimeView = function TimeView(props) {
     }
   });
   var classes = styles();
+  var myRef = React.useRef(null);
+  React.useEffect(function () {
+    var node = myRef.current;
+    node.focus();
+    var win = window;
+    win.scrollIndex = 0;
+  }, []);
 
   var _onClick = function onClick(time) {
     var ampm = time.slice(6);
     var add = ampm === 'AM' ? 0 : 12;
     setSelected(time);
     var date = props.date;
-    date.setHours(Number(time.slice(0, 2)) + add);
+    var hr = Number(time.slice(0, 2)) + add;
+    date.setHours(hr === 24 ? 12 : hr);
     date.setMinutes(Number(time.slice(3, 5)));
-    props.onMinutesChange(date, true);
+    props.onMinutesChange(date, false);
     setSelectedDate(date);
   };
 
@@ -1992,12 +2000,47 @@ var TimeView = function TimeView(props) {
     var date = props.date;
     date.setHours(Number(h));
     date.setMinutes(Number(m));
-    props.onMinutesChange(date, true);
+    props.onMinutesChange(date, false);
     setSelectedDate(date);
   };
 
-  return React__default.createElement(core.Box, null, React__default.createElement(core.Box, {
-    className: classes.listView
+  var onkeydown = function onkeydown(e) {
+    var win = window;
+    var active = document.activeElement;
+
+    if (e.keyCode === 40) {
+      if (active.nextSibling) {
+        active.nextSibling.focus();
+      }
+
+      if (win.scrollIndex < 64) {
+        win.scrollIndex++;
+
+        _onClick(times[win.scrollIndex]);
+      }
+    }
+
+    if (e.keyCode === 38) {
+      if (active.previousSibling) {
+        active.previousSibling.focus();
+      }
+
+      if (win.scrollIndex >= 1) {
+        win.scrollIndex--;
+
+        _onClick(times[win.scrollIndex]);
+      }
+    }
+  };
+
+  return React__default.createElement(core.Box, null, React__default.createElement("div", {
+    ref: myRef,
+    onKeyDown: onkeydown,
+    className: classes.listView,
+    tabIndex: 1,
+    style: {
+      outline: 'none'
+    }
   }, times.map(function (ele, index) {
     return React__default.createElement(core.Box, {
       onClick: function onClick() {

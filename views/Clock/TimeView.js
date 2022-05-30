@@ -35,14 +35,22 @@ exports.TimeView = function (props) {
         }
     });
     var classes = styles();
+    var myRef = react_1.useRef(null);
+    react_1.useEffect(function () {
+        var node = myRef.current;
+        node.focus();
+        var win = window;
+        win.scrollIndex = 0;
+    }, []);
     var onClick = function (time) {
         var ampm = time.slice(6);
         var add = ampm === 'AM' ? 0 : 12;
         setSelected(time);
         var date = props.date;
-        date.setHours(Number(time.slice(0, 2)) + add);
+        var hr = Number(time.slice(0, 2)) + add;
+        date.setHours(hr === 24 ? 12 : hr);
         date.setMinutes(Number(time.slice(3, 5)));
-        props.onMinutesChange(date, true);
+        props.onMinutesChange(date, false);
         setSelectedDate(date);
     };
     var onDateChange = function (e) {
@@ -52,11 +60,33 @@ exports.TimeView = function (props) {
         var date = props.date;
         date.setHours(Number(h));
         date.setMinutes(Number(m));
-        props.onMinutesChange(date, true);
+        props.onMinutesChange(date, false);
         setSelectedDate(date);
     };
+    var onkeydown = function (e) {
+        var win = window;
+        var active = document.activeElement;
+        if (e.keyCode === 40) {
+            if (active.nextSibling) {
+                active.nextSibling.focus();
+            }
+            if (win.scrollIndex < 64) {
+                win.scrollIndex++;
+                onClick(times_1.times[win.scrollIndex]);
+            }
+        }
+        if (e.keyCode === 38) {
+            if (active.previousSibling) {
+                active.previousSibling.focus();
+            }
+            if (win.scrollIndex >= 1) {
+                win.scrollIndex--;
+                onClick(times_1.times[win.scrollIndex]);
+            }
+        }
+    };
     return (react_1.default.createElement(core_1.Box, null,
-        react_1.default.createElement(core_1.Box, { className: classes.listView }, times_1.times.map(function (ele, index) { return (react_1.default.createElement(core_1.Box, { onClick: function () { return onClick(ele); }, className: classes.listItem + " " + (selected === ele ? 'active' : ''), key: index }, ele)); })),
+        react_1.default.createElement("div", { ref: myRef, onKeyDown: onkeydown, className: classes.listView, tabIndex: 1, style: { outline: 'none' } }, times_1.times.map(function (ele, index) { return (react_1.default.createElement(core_1.Box, { onClick: function () { return onClick(ele); }, className: classes.listItem + " " + (selected === ele ? 'active' : ''), key: index }, ele)); })),
         react_1.default.createElement("hr", null),
         react_1.default.createElement("div", { style: { textAlign: 'center' } },
             react_1.default.createElement(core_2.TextField, { variant: "outlined", size: "small", style: { width: '140px' }, type: "time", value: (new Date(selectedDate)).toTimeString().slice(0, 5), onChange: function (e) { return onDateChange(e); }, id: "birthdaytime", name: "birthdaytime" }),
